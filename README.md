@@ -1,6 +1,6 @@
 # BRK VORP Stables Rework
 
-A free community rework of VORP Stables for RedM/VORP.
+A free community rework of VORP Stables
 
 This resource is based on the original VORP stable system and has been updated with cleaner stable configuration, improved menu behavior, expanded horse/component data, vendor-specific shop behavior, and a new tack storage/loadout workflow.
 

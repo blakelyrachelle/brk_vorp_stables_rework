@@ -2,6 +2,7 @@ CurrentHorse = nil
 CurrentCart = nil
 
 local horseCurrentlyFollowingPlayer = nil
+local RideCallCooldown = 1500
 
 local function GetCompHash(comp)
     if type(comp) == "table" then--more new hit dont forget
@@ -106,11 +107,33 @@ function CallRide(ride)
         return
     end
 
+    local now = GetGameTimer()
+
+    if ride.isSpawning then
+        return
+    end
+
+    if ride.lastCallAt and now - ride.lastCallAt < RideCallCooldown then
+        return
+    end
+
+    ride.lastCallAt = now
+
     local x, y, z = table.unpack(GetEntityCoords(PlayerPedId()))
 
     if ride.pedId == nil or not DoesEntityExist(ride.pedId) then
+        ride.isSpawning = true
+
         Citizen.CreateThread(function()
             LoadModel(ride.model)
+
+            -- Safety check after model load so H/J spam cannot create stacked spawn threads.
+            if ride.pedId ~= nil and DoesEntityExist(ride.pedId) then
+                ride.isSpawning = false
+                SetModelAsNoLongerNeeded(ride.model)
+                return
+            end
+
             local spawnX, spawnY, spawnZ = table.unpack(getPositionBehindPlayer(x, y, z, GetEntityHeading(PlayerPedId()), 10))
             local _, spawn, _ = GetClosestRoad(spawnX, spawnY, spawnZ, 0.0, 25, true);
             -- Check if the road is not too far away, else spawn at ped
@@ -123,8 +146,17 @@ function CallRide(ride)
             if ride.type == "horse" then
                 ride.pedId = CreatePed(ride.model, spawn.x, spawn.y, spawn.z, 0.0, true, true, false, false);
             elseif ride.type == "cart" then
-                ride.pedId = CreateVehicle(ride.model, spawn[1], spawn[2], spawn[3], 0, true, true, false, true)
+                ride.pedId = CreateVehicle(ride.model, spawn.x, spawn.y, spawn.z, 0, true, true, false, true)
             else
+                ride.isSpawning = false
+                SetModelAsNoLongerNeeded(ride.model)
+                return
+            end
+
+            if ride.pedId == nil or ride.pedId == 0 or not DoesEntityExist(ride.pedId) then
+                ride.pedId = nil
+                ride.isSpawning = false
+                SetModelAsNoLongerNeeded(ride.model)
                 return
             end
 
@@ -139,6 +171,7 @@ function CallRide(ride)
                 finishHorseSpawn(ride)
             end
 
+            ride.isSpawning = false
             SetModelAsNoLongerNeeded(ride.model)
         end)
         return

@@ -4,6 +4,17 @@ CurrentCart = nil
 local horseCurrentlyFollowingPlayer = nil
 local RideCallCooldown = 1500
 
+local function GetConfiguredKey(keyName, fallback)
+    if type(keyName) == "number" then
+        return keyName
+    end
+    if type(keyName) == "string" and Keys[keyName] then
+        return Keys[keyName]
+    end
+
+    return fallback
+end
+
 local function GetCompHash(comp)
     if type(comp) == "table" then--more new hit dont forget
         comp = comp.hash or comp.comp_hash or comp.model or comp[1]
@@ -287,12 +298,12 @@ function ActionsOnKeyPress()
     end
     -- Open inventories
     -- //TODO let anyone open if set in Config
-    if CurrentHorse ~= nil and CurrentHorse.pedId and #(GetEntityCoords(PlayerPedId()) - GetEntityCoords(CurrentHorse.pedId)) <= 5.0 and IsControlJustPressed(0, `INPUT_OPEN_SATCHEL_HORSE_MENU`) then
-        TriggerServerEvent(Events.openInventory, CurrentHorse.model, CurrentHorse.id)
-    elseif CurrentCart ~= nil and CurrentCart.pedId and #(GetEntityCoords(PlayerPedId()) - GetEntityCoords(CurrentCart.pedId)) <= 5.0 and
-        IsControlJustPressed(0, Keys.U) then
-        TriggerServerEvent(Events.openInventory, CurrentCart.model, CurrentCart.id)
-    end
+    local invKey = GetConfiguredKey(Config.InvKeyToPress, Keys.U)
+        if CurrentHorse ~= nil and CurrentHorse.pedId and #(GetEntityCoords(PlayerPedId()) - GetEntityCoords(CurrentHorse.pedId)) <= 5.0 and IsControlJustPressed(0, invKey) then
+            TriggerServerEvent(Events.openInventory, CurrentHorse.id)
+        elseif CurrentCart ~= nil and CurrentCart.pedId and #(GetEntityCoords(PlayerPedId()) - GetEntityCoords(CurrentCart.pedId)) <= 5.0 and IsControlJustPressed(0, invKey) then
+            TriggerServerEvent(Events.openInventory, CurrentCart.id)
+        end
 end
 
 function DeathManager()

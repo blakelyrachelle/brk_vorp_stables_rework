@@ -10,6 +10,7 @@ Config = {
     CallHorseKey = Keys.H,
     CallCartKey = Keys.J,
     FollowKey = Keys.E,
+    InvKeyToPress = "U",
 
     DisableBuyOption = false,
     JobRequired = false,

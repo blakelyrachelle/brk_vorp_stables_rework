@@ -23,6 +23,16 @@ local function IsValidResourceName(src)
     return false
 end
 
+local function GetRideInventoryId(rideId)
+    return ("brk_stables_ride_%s"):format(rideId)
+end
+local function GetRideInventoryLimit(rideModel)
+    if Config.CustomMaxWeight[rideModel] then
+        return Config.CustomMaxWeight[rideModel]
+    end
+    return Config.DefaultMaxWeight
+end
+
 CreateThread(function()
     if VorpCore.RegisterJobs then
         -- only register if jobs are actually used
@@ -112,13 +122,8 @@ end)
 
         if regInvs ~= nil then
             for _, ride in pairs(result) do
-                local limit
-                if Config.CustomMaxWeight[ride.modelname] then
-                    limit = Config.CustomMaxWeight[ride.modelname]
-                else
-                    limit = Config.DefaultMaxWeight
-                end
-                local id = ("%s_%s"):format(ride.modelname, charId)
+                local limit = GetRideInventoryLimit(ride.modelname)
+                local id = GetRideInventoryId(ride.id)
                 VorpInv.registerInventory(id, ride.name, limit, true, Config.ShareInv[ride.type], Config.StackInvIgnore[ride.type])
             end
         end
@@ -230,14 +235,12 @@ player.removeCurrency(currency, price)
             if result.affectedRows > 0 then
                 TriggerClientEvent("vorp:TipRight", src,
                     Config.Lang.TipRidePurchased:gsub("%{rideName}", rideName):gsub("%{price}", price), 4000)
-                local limit
-                if Config.CustomMaxWeight[rideModel] ~= nil then
-                    limit = Config.CustomMaxWeight[rideModel]
-                else
-                    limit = Config.DefaultMaxWeight
-                end
-                local invid = ("%s_%s"):format(rideModel, id)
-                VorpInv.registerInventory(invid, rideName, limit, true, Config.ShareInv[rideType], false)
+                local rideId = result.insertId
+                local limit = GetRideInventoryLimit(rideModel)
+                    if rideId then
+                local invid = GetRideInventoryId(rideId)
+                    VorpInv.registerInventory(invid, rideName, limit, true, Config.ShareInv[rideType], Config.StackInvIgnore[rideType])
+                    end
                 LoadStableContent(src, id)
             end
         end)
@@ -783,26 +786,45 @@ RegisterNetEvent(Events.onTransferRecieve, function(rideId, targetChar, accepted
 end)
 
 local defaultHorse = {}
-RegisterNetEvent(Events.openInventory, function(rideModel, newRide)
+RegisterNetEvent(Events.openInventory, function(rideId)
     local src = source
     local user = VorpCore.getUser(src)
+
     if not user then return end
 
     local character = user.getUsedCharacter
     local charId = character.charIdentifier
-    local id = ("%s_%s"):format(rideModel, charId)
 
-    local isRegistered = exports.vorp_inventory:isCustomInventoryRegistered(id)
-    if not isRegistered then
-        TriggerClientEvent("vorp:TipRight", src, "This inventory is not registered id: " .. id, 4000)
-        return
+    rideId = tonumber(rideId)
+
+    if not rideId then
+        return TriggerClientEvent("vorp:TipRight", src, "Invalid ride inventory.", 4000)
     end
 
-    if defaultHorse[src] and not defaultHorse[src] == newRide then
-        return TriggerClientEvent("vorp:TipRight", src, "cant open inventory of a horse that is not your default", 4000)
-    end
+    db:execute("SELECT id, charidentifier, name, modelname, type FROM stables WHERE `id` = ?", {
+        rideId
+    }, function(result)
+        local ride = result[1]
 
-    exports.vorp_inventory:openInventory(src, id)
+        if not ride then
+            return TriggerClientEvent("vorp:TipRight", src, "Ride not found.", 4000)
+        end
+
+        if ride.charidentifier ~= charId and not Config.ShareInv[ride.type] then
+            return TriggerClientEvent("vorp:TipRight", src, "You do not own this ride.", 4000)
+        end
+
+        local id = GetRideInventoryId(ride.id)
+        local limit = GetRideInventoryLimit(ride.modelname)
+
+        local isRegistered = exports.vorp_inventory:isCustomInventoryRegistered(id)
+
+        if not isRegistered then
+            VorpInv.registerInventory(id, ride.name, limit, true, Config.ShareInv[ride.type], Config.StackInvIgnore[ride.type])
+        end
+
+        exports.vorp_inventory:openInventory(src, id)
+    end)
 end)
 
 RegisterNetEvent(Events.setDefault, function(newRide, prevRide)

@@ -41,7 +41,7 @@ For bug support or reasonable behavior-tweak requests, contact **Akrania** on Di
 - Configure display names more cleanly.
 - Set a currency type per horse/vendor entry.
 
-### Tack and Equipment
+### Tack and Equipment/Inventory
 
 - Tack is separated from hair components.
 - Manes and tails save directly to the horse.
@@ -52,6 +52,12 @@ For bug support or reasonable behavior-tweak requests, contact **Akrania** on Di
 - Stored tack can be equipped again from the stable menu.
 - Per-horse tack loadouts are tracked separately from general tack storage.
 - Duplicate tack limits can be controlled through config.
+- - each horse has its own storage
+- same-model horses no longer share storage
+- transferred horses keep the same inventory ID
+- saddlebag inventory follows horse_id instead of char/model
+- open saddlebag key configurable
+- inventory ID is handled differently to avoid conflicts and bugs
 
 ### Compatibility / Migration Support
 

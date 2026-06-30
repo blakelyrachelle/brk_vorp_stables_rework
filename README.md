@@ -1,6 +1,6 @@
 # BRK VORP Stables Rework
 
-Vedeo here: https://www.youtube.com/watch?v=o6iiqvaUthQ
+[Watch the demo video](https://www.youtube.com/watch?v=o6iiqvaUthQ)
 
 A free community rework of VORP Stables
 

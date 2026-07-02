@@ -47,17 +47,15 @@ For bug support or reasonable behavior-tweak requests, contact **Akrania** on Di
 - Manes and tails save directly to the horse.
 - Tack uses a storage/loadout system.
 - Bought tack equips to the selected horse.
-- Replaced tack moves into tack storage instead of being deleted.
 - Removing horse equipment stores equipped tack instead of deleting it.
 - Stored tack can be equipped again from the stable menu.
 - Per-horse tack loadouts are tracked separately from general tack storage.
 - Duplicate tack limits can be controlled through config.
 - - each horse has its own storage
-- same-model horses no longer share storage
+- same model horses no longer share storage
 - transferred horses keep the same inventory ID
 - saddlebag inventory follows horse_id instead of char/model
 - open saddlebag key configurable
-- inventory ID is handled differently to avoid conflicts and bugs
 
 ### Compatibility / Migration Support
 
